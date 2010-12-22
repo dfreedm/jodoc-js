@@ -18,3 +18,28 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 **Super ultra pre alpha, everything will change, nothing will work the same!**
 
 *You have been warned!*
+
+## New stuff, or "Docs Gone Wild!"
+
+Adding some new features to the jodoc spec, including easier auto-linking
+between documentation sets. Basically, to make it easier to "roll up" docs
+from one or more code bases. Consider the following case:
+
+- docs from JS lib from vendor A
+- docs from JS lib from vendor B
+- project-specific docs from application level code
+- coding standards and other esoteric docs
+
+Basically, working on an optional way to easily unite stuff like this into
+a single TOC and have auto-linking applied throughout.
+
+Some considerations:
+
+- there may be more than one section with the same name; so a disambiguation
+  scheme for links that have more than one place to go
+
+- some doc sets can and should put more levels than H1 in their TOC, this is
+  more the case for esoteric docs than code docs
+
+- leaning on the new JSON config file notion to fuel this
+
