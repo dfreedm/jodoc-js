@@ -1,0 +1,20 @@
+# jodoc-js
+
+A nodejs port of joDoc
+
+## Features
+
+- Automatic conversion of markdown commented javascript code
+- Self-linking documenatation
+- A quick and easy table of contents system
+- JSON configuration
+
+## Plugable filters
+
+- Add your own filters to pre or post markdown'd docs
+- Probably a few prebaked filters to make pretty, pretty output
+
+##Status
+**Super ultra pre alpha, everything will change, nothing will work the same!**
+
+*You have been warned!*
