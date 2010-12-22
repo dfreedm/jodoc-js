@@ -1,6 +1,6 @@
 # jodoc-js
 
-A nodejs port of joDoc
+A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 
 ## Features
 
