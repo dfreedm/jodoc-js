@@ -5,6 +5,8 @@ var child = require('child_process');
 var default_template = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n<html lang="en">\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n<title>$title</title>\n<meta name="generator" content="joDoc">\n<link rel="stylesheet" type="text/css" href="docbody.css">\n<link rel="stylesheet" type="text/css" href="doc.css">\n<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">\n<meta name="format-detection" content="false">\n</head>\n<body>\n$body\n</body>\n</html>';
 
 // strip incoming text of comments
+// input: "code"
+// output: "comments"
 function docker (input) {
 	var strip_code = /\*\*(?:.|[\r\n])*?\*/g;
 	var strip_stars = /\*|\*\*/g;
@@ -22,12 +24,14 @@ function docker (input) {
 }
 
 // add a nice header
+// input: "body" | {body:"body", title:"title", template:"template"}
+// output "templated html"
 function html_header (inbag) {
 	var title, body, template, output;
 	if (typeof inbag === "string") {
 		body = inbag;
 	}
-	if (typeof inbag === "object") {
+	else if (typeof inbag === "object") {
 		body = inbag.body;
 		title = inbag.title;
 		template = inbag.template;
@@ -40,6 +44,8 @@ function html_header (inbag) {
 }
 
 // munge output filenames
+// input: "full/path/to/file"
+// output: "munged_file_name"
 function munge_filename(file) {
 	var path_parts = file.split("/");
 	path_parts = path_parts.map(
@@ -53,12 +59,20 @@ function munge_filename(file) {
 	return path_parts.join("_") + ".html";
 }
 
-function index_to_json (keywords) {
-	keywords = keywords.sort(function(a,b) { return a.term < b.term });
+// turn h1s into an index propertybag
+// input: h1s
+// output: "Stringified index"
+function index_to_json (h1s) {
+	var keywords = [];
+	for (var keyword in h1s) {
+		keywords.push({term:keyword, url:h1s[keyword]});
+	}
 	return JSON.stringify(keywords);
 }
 
 // find and return all the h1 tags in the processed files
+// input: [{name:"filename", content:"file content"}]
+// output: {h1s: {h1:file_name,...}, files_to_h1s: {filename:[h1s_in_file],...}}
 function h1finder (processed) {
 	var h1s = {};
 	var files_to_h1s = {};
@@ -71,17 +85,54 @@ function h1finder (processed) {
 				accum_h1s.push(h1[1]);
 			}
 			accum_h1s.forEach(
-				function (file) {
-					h1s[file] = file_info.name;
+				function (h1) {
+					h1s[h1] = file_info.name;
 				}
 			);
 			files_to_h1s[file_info.name] = accum_h1s;
 		}
 	);
-	return [h1s, files_to_h1s];
+	return {h1s:h1s, files_to_h1s:files_to_h1s};
+}
+
+// make a nice index of the h1s
+// input: h1s, outputdir = true | false
+// output: "index markdown"
+function indexer (h1s, outputdir) {
+	var keywords = Object.keys(h1s).sort();
+	var keyword_letters = {};
+	// format output markdown based on outputdir
+	var formatter = function(keyword) {
+		if (outputdir) {
+			return '- [' + keyword + ']' + '(' + h1s[keyword] + '#' + keyword + ')';
+		} else {
+			return '- [' + keyword + ']' + '(#' + keyword + ')';
+		}
+	};
+	// split keyword list into lettered segments
+	keywords.forEach(
+		function(keyword) {
+			// works for RTL languages only I guess
+			var letter = keyword.toLocaleUpperCase.substr(0);
+			letter = "## " + letter;
+			if (typeof keyword_letters[letter] === "undefined") {
+				keyword_letters[letter] = [formatter(keyword)];
+			} else {
+				(keyword_letters[letter]).push(formatter(keyword));
+			}
+		}
+	);
+	var keywords_marked = [];
+	for (var letter in keyword_letters) {
+		var list_out = letter + '\n';
+		var list_out += (keyword_letters[letter]).join("\n");
+		keywords_marked.push(list_out);
+	}
+	return '#Index\n<span id="index">' + keywords_marked.join("\n") + '</span>';
 }
 
 exports.docker = docker;
 exports.html_header = html_header;
 exports.munge_filename = munge_filename;
 exports.h1finder = h1finder;
+exports.indexer = indexer;
