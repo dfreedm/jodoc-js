@@ -63,13 +63,10 @@ function flatten_files(infiles) {
 function main() {
     var files = getOpts();
     // if no files given, glob the current directory
-    console.log(files.length);
     if (files.length == 0) {
         files.push('.');
     }
-    console.log(files);
     files = flatten_files(files);
-    console.log(files);
 
     // filter files
     files = files.filter(function (file) {
