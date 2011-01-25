@@ -1,6 +1,10 @@
+#!/usr/bin/env node
+
 var fs = require('fs');
 var path = require('path');
-var jodoc = require('./lib/jodoc-lib.js');
+var spawn = require('child_process').spawn;
+
+var jodoc = require('jodoc-lib'); // ~/.node_libraries/jodoc-lib.js -> lib/jodoc-lib.js
 
 var options = {};
 
@@ -32,10 +36,19 @@ function getOpts() {
     return files;
 }
 
+// avoid recursing down VCS directories
+function no_vcs(infile) {
+    // If there's any more, feel free to add
+    var vcs = /^\.(git|svn|cvs|hg|bzr)$/;
+    infile = path.basename(infile);
+    return !infile.match(vcs);
+}
+
 // recursively flatten folders into files
 function flatten_files(infiles) {
     var stat;
     var outfiles = [];
+    infiles = infiles.filter(no_vcs);
     infiles.forEach(function(file) {
         try {
             stat = fs.statSync(file);
@@ -49,7 +62,7 @@ function flatten_files(infiles) {
             }
             /*
             * I assume it is a regular file here
-            * Don't do stupid and do jodoc on a fscking block device or socket
+            * Don't do a stupid and run jodoc on a block device or socket
             * You're gonna have a bad time
             */
             else {
@@ -63,7 +76,7 @@ function flatten_files(infiles) {
 function main() {
     var files = getOpts();
     // if no files given, glob the current directory
-    if (files.length == 0) {
+    if (!files.length) {
         files.push('.');
     }
     files = flatten_files(files);
@@ -81,7 +94,7 @@ function main() {
             content = jodoc.docker(content);
         }
         //pass through markdown
-        if (! file.match(/\.html$/)) {
+        if (! file.match(/\.htm[l]?$/)) {
             //TODO content = markdown(content);
         }
         return content;
@@ -97,6 +110,27 @@ function main() {
      index
      spit out
     */
+}
+
+// wrap a markdown processor in a nice lambda
+function markdown_pipe(callback) {
+    var markdown_bin, markdown_wrapper;
+    // try for markdown-js
+    try{
+        markdown_bin = require('markdown-js');
+        markdown_wrapper = function(content){ callback(markdown_bin.toHTML(content)) };
+    }
+    // spawn a markdown process
+    catch(_) {
+        markdown_bin = spawn('markdown');
+        markdown_wrapper = function(content){
+            var buffer = "";
+            markdown_bin.stdin.write(content);
+            markdown_bin.stdout.on('data', function(i){ buffer += i });
+            markdown_bin.stdout.on('end', callback(buffer));
+        };
+    }
+    return markdown_wrapper;
 }
 
 main();
