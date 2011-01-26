@@ -78,7 +78,7 @@ function markdown_pipe(content, callback) {
     var markdown_bin;
     // try for markdown-js
     try{
-        markdown_bin = require('markdown-js');
+        markdown_bin = require('markdown');
         callback(markdown_bin.toHTML(content));
     }
     // spawn a markdown process
@@ -124,7 +124,7 @@ function main() {
     var mark_done = function(index) {
         return function(marked_content) {
             marked[index] = marked_content;
-            if (marked.every(function(c){ return !!c })) toclink(marked);
+            if (marked.every(function(c){ return c !== null })) toclink(marked);
         };
     };
 
