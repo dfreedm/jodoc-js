@@ -74,25 +74,22 @@ function flatten_files(infiles) {
 }
 
 // wrap a markdown processor in a nice lambda
-function markdown_pipe(callback) {
-    var markdown_bin, markdown_wrapper;
+function markdown_pipe(content, callback) {
+    var markdown_bin;
     // try for markdown-js
     try{
         markdown_bin = require('markdown-js');
-        markdown_wrapper = function(content){ callback(markdown_bin.toHTML(content)) };
+        callback(markdown_bin.toHTML(content));
     }
     // spawn a markdown process
     catch(_) {
+        var buffer = "";
         markdown_bin = spawn('markdown');
-        markdown_wrapper = function(content){
-            var buffer = "";
-            markdown_bin.stdin.write(content);
-            markdown_bin.stdin.end();
-            markdown_bin.stdout.on('data', function(i){ buffer += i });
-            markdown_bin.stdout.on('end', function(){callback(buffer)});
-        };
+        markdown_bin.stdin.write(content);
+        markdown_bin.stdin.end();
+        markdown_bin.stdout.on('data', function(i){ buffer += i });
+        markdown_bin.stdout.on('end', function(){callback(buffer)});
     }
-    return markdown_wrapper;
 }
 
 
@@ -108,7 +105,6 @@ function main() {
     files = files.filter(function (file) {
         return file.match(/\.(js|css|mdown|htm[l]?|md|markdown)$/);
     });
-    console.log(files);
 
     // allocate array for markdown'd files
     var marked = files.map(function(){ return null });
@@ -122,7 +118,6 @@ function main() {
         }
         return {filename: file, content: content};
     });
-    console.log(files);
 
     // My sad attempt at futures
     // Continue only if all the files have passed through the markdown process
@@ -140,10 +135,9 @@ function main() {
             marked[i] = file.content;
         }
         else {
-            (markdown_pipe(mark_done(i)))(file.content);
+            markdown_pipe(file.content, mark_done(i));
         }
     }
-
 }
 
 // toclink the incoming files
