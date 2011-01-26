@@ -73,45 +73,6 @@ function flatten_files(infiles) {
     return outfiles;
 }
 
-function main() {
-    var files = getOpts();
-    // if no files given, glob the current directory
-    if (!files.length) {
-        files.push('.');
-    }
-    files = flatten_files(files);
-
-    // filter files
-    files = files.filter(function (file) {
-        return file.match(/\.(js|css|mdown|htm[l]?|md|markdown)$/);
-    });
-
-    // read files
-    files = files.map(function (file) {
-        //dockify js and css files
-        var content = fs.readFileSync(file,"utf8")
-        if (file.match(/\.(js|css)$/)) {
-            content = jodoc.docker(content);
-        }
-        //pass through markdown
-        if (! file.match(/\.htm[l]?$/)) {
-            //TODO content = markdown(content);
-        }
-        return content;
-    });
-    console.log(files);
-
-
-    /* TODO
-     toclink
-     munge
-     h1find
-     autolink
-     index
-     spit out
-    */
-}
-
 // wrap a markdown processor in a nice lambda
 function markdown_pipe(callback) {
     var markdown_bin, markdown_wrapper;
@@ -126,11 +87,76 @@ function markdown_pipe(callback) {
         markdown_wrapper = function(content){
             var buffer = "";
             markdown_bin.stdin.write(content);
+            markdown_bin.stdin.end();
             markdown_bin.stdout.on('data', function(i){ buffer += i });
-            markdown_bin.stdout.on('end', callback(buffer));
+            markdown_bin.stdout.on('end', function(){callback(buffer)});
         };
     }
     return markdown_wrapper;
 }
+
+
+function main() {
+    var files = getOpts();
+    // if no files given, glob the current directory
+    if (!files.length) {
+        files.push('.');
+    }
+    files = flatten_files(files);
+
+    // filter files
+    files = files.filter(function (file) {
+        return file.match(/\.(js|css|mdown|htm[l]?|md|markdown)$/);
+    });
+    console.log(files);
+
+    // allocate array for markdown'd files
+    var marked = files.map(function(){ return null });
+
+    // read files
+    files = files.map(function (file) {
+        //dockify js and css files
+        var content = fs.readFileSync(file,"utf8")
+        if (file.match(/\.(js|css)$/)) {
+            content = jodoc.docker(content);
+        }
+        return {filename: file, content: content};
+    });
+    console.log(files);
+
+    // My sad attempt at futures
+    // Continue only if all the files have passed through the markdown process
+    var mark_done = function(index) {
+        return function(marked_content) {
+            marked[index] = marked_content;
+            if (marked.every(function(c){ return !!c })) toclink(marked);
+        };
+    };
+
+    // async markdowning
+    for(var i = 0, len = files.length; i < len; i++) {
+        var file = files[i];
+        if (file.filename.match(/\.htm[l]?$/)) {
+            marked[i] = file.content;
+        }
+        else {
+            (markdown_pipe(mark_done(i)))(file.content);
+        }
+    }
+
+}
+
+// toclink the incoming files
+function toclink(files) {
+    console.log(files);
+}
+
+/* TODO
+    munge
+    h1find
+    autolink
+    index
+    spit out
+*/
 
 main();
