@@ -30,6 +30,9 @@ function getOpts() {
             case '--title': options.title = args.shift();
                 break;
 
+            case '-m':
+            case '--markdown': options.markdown = args.shift();
+
             default: files.push(arg);
         }
     }
@@ -85,7 +88,7 @@ function markdown_pipe(file, callback) {
     // spawn a markdown process
     catch(_) {
         var buffer = "";
-        markdown_bin = spawn('markdown');
+        markdown_bin = spawn(options.markdown || 'markdown');
         markdown_bin.stdin.write(file.content);
         markdown_bin.stdin.end();
         markdown_bin.stdout.on('data', function(i){ buffer += i });
