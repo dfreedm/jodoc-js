@@ -74,21 +74,22 @@ function flatten_files(infiles) {
 }
 
 // wrap a markdown processor in a nice lambda
-function markdown_pipe(content, callback) {
+function markdown_pipe(file, callback) {
     var markdown_bin;
     // try for markdown-js
     try{
         markdown_bin = require('markdown');
-        callback(markdown_bin.toHTML(content));
+        file.content = markdown_bin.toHTML(file.content);
+        callback(file);
     }
     // spawn a markdown process
     catch(_) {
         var buffer = "";
         markdown_bin = spawn('markdown');
-        markdown_bin.stdin.write(content);
+        markdown_bin.stdin.write(file.content);
         markdown_bin.stdin.end();
         markdown_bin.stdout.on('data', function(i){ buffer += i });
-        markdown_bin.stdout.on('end', function(){callback(buffer)});
+        markdown_bin.stdout.on('end', function(){file.content = buffer; callback(file)});
     }
 }
 
@@ -103,7 +104,7 @@ function main() {
 
     // filter files
     files = files.filter(function (file) {
-        return file.match(/\.(js|css|mdown|htm[l]?|md|markdown)$/);
+        return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/);
     });
 
     // allocate array for markdown'd files
@@ -116,14 +117,14 @@ function main() {
         if (file.match(/\.(js|css)$/)) {
             content = jodoc.docker(content);
         }
-        return {filename: file, content: content};
+        return {name: file, content: content};
     });
 
-    // My sad attempt at futures
+    // My sad attempt at a countdown latch
     // Continue only if all the files have passed through the markdown process
     var mark_done = function(index) {
-        return function(marked_content) {
-            marked[index] = marked_content;
+        return function(marked_file) {
+            marked[index] = marked_file;
             if (marked.every(function(c){ return c !== null })) toclink(marked);
         };
     };
@@ -131,17 +132,40 @@ function main() {
     // async markdowning
     for(var i = 0, len = files.length; i < len; i++) {
         var file = files[i];
-        if (file.filename.match(/\.htm[l]?$/)) {
-            marked[i] = file.content;
+        if (file.name.match(/\.htm[l]?$/)) {
+            marked[i] = file;
         }
         else {
-            markdown_pipe(file.content, mark_done(i));
+            markdown_pipe(file, mark_done(i));
         }
     }
 }
 
 // toclink the incoming files
 function toclink(files) {
+    if (options.toc) {
+        var tocline = /(\s*).\s*{(.+)}/, tocline_res;
+        var h1stuff = jodoc.h1finder(files);
+        var toc = fs.readFileSync(options.toc, "utf8").split("\n");
+        var toclinked = [];
+        toc.forEach(function(line) {
+            if ((tocline_res = tocline.exec(line)) != null) {
+                line = jodoc.toclinker(h1stuff, tocline_res[1], tocline_res[2]);
+            }
+            toclinked.push(line);
+        });
+        var tocfile = {name: "_content", content: toclinked.join("\n")};
+        var toc_callback = function(marked_tocfile) {
+            files.push(marked_tocfile);
+            munge(files);
+        };
+        markdown_pipe(tocfile, toc_callback);
+    } else {
+        munge(files)
+    };
+}
+
+function munge(files) {
     console.log(files);
 }
 
