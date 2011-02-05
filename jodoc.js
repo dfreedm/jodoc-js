@@ -80,19 +80,17 @@ function flatten_files(infiles) {
 function markdown_pipe(file, callback) {
     var markdown_bin;
     // try for markdown-js
-    try{
-        markdown_bin = require('markdown');
-        file.content = markdown_bin.toHTML(file.content);
-        callback(file);
-    }
-    // spawn a markdown process
-    catch(_) {
-        var buffer = "";
+    if (options.markdown) {
         markdown_bin = spawn(options.markdown || 'markdown');
         markdown_bin.stdin.write(file.content);
         markdown_bin.stdin.end();
-        markdown_bin.stdout.on('data', function(i){ buffer += i });
-        markdown_bin.stdout.on('end', function(){file.content = buffer; callback(file)});
+        markdown_bin.stdout.on('data', function(buffer){ file.content = buffer.toString() });
+        markdown_bin.stdout.on('end', function(){ callback(file) });
+    }
+    else {
+        markdown_bin = require('./lib/showdown.js');
+        file.content = markdown_bin.showdown(file.content);
+        callback(file);
     }
 }
 
