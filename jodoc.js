@@ -81,7 +81,7 @@ function markdown_pipe(file, callback) {
     var markdown_bin;
     // try for markdown-js
     if (options.markdown) {
-        markdown_bin = spawn(options.markdown || 'markdown');
+        markdown_bin = spawn(options.markdown);
         markdown_bin.stdin.write(file.content);
         markdown_bin.stdin.end();
         markdown_bin.stdout.on('data', function(buffer){ file.content = buffer.toString() });
@@ -167,7 +167,7 @@ function toclink(files) {
 }
 
 function munge(files) {
-    console.log(files);
+    files = files.map(function(file){ file.name = jodoc.munge_filename(file.name); return file; });
 }
 
 /* TODO
