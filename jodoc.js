@@ -104,9 +104,7 @@ function main() {
     files = flatten_files(files);
 
     // filter files
-    files = files.filter(function (file) {
-        return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/);
-    });
+    files = files.filter(function (file) { return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/) });
 
     // allocate array for markdown'd files
     var marked = files.map(function(){ return null });
@@ -158,23 +156,24 @@ function toclink(files) {
         var tocfile = {name: "_content", content: toclinked.join("\n")};
         var toc_callback = function(marked_tocfile) {
             files.push(marked_tocfile);
-            munge(files);
+            next_phase(files);
         };
         markdown_pipe(tocfile, toc_callback);
     } else {
-        munge(files)
+        next_phase(files)
     };
 }
 
-function munge(files) {
+function next_phase(files) {
     files = files.map(function(file){ file.name = jodoc.munge_filename(file.name); return file; });
+    var h1stuff = jodoc.h1finder(files);
+    var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
+    var index = jodoc.indexer(h1stuff.h1s, options.output);
+    console.log(linked_files);
+    console.log(index);
 }
 
 /* TODO
-    munge
-    h1find
-    autolink
-    index
     spit out
 */
 
