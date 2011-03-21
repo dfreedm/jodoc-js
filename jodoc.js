@@ -2,9 +2,8 @@
 
 var fs = require('fs');
 var path = require('path');
-var spawn = require('child_process').spawn;
-
-var jodoc = require('jodoc-lib'); // ~/.node_libraries/jodoc-lib.js -> lib/jodoc-lib.js
+var jodoc = require(__dirname + '/lib/jodoc-lib.js');
+var markdown = require(__dirname + '/lib/showdown.js').showdown;
 
 var options = {};
 
@@ -30,8 +29,9 @@ function getOpts() {
             case '--title': options.title = args.shift();
                 break;
 
-            case '-m':
-            case '--markdown': options.markdown = args.shift();
+            case '-ni':
+            case '--no-index': options.noindex = true;
+                break;
 
             default: files.push(arg);
         }
@@ -76,25 +76,6 @@ function flatten_files(infiles) {
     return outfiles;
 }
 
-// wrap a markdown processor in a nice lambda
-function markdown_pipe(file, callback) {
-    var markdown_bin;
-    // try for markdown-js
-    if (options.markdown) {
-        markdown_bin = spawn(options.markdown);
-        markdown_bin.stdin.write(file.content);
-        markdown_bin.stdin.end();
-        markdown_bin.stdout.on('data', function(buffer){ file.content = buffer.toString() });
-        markdown_bin.stdout.on('end', function(){ callback(file) });
-    }
-    else {
-        markdown_bin = require('./lib/showdown.js');
-        file.content = markdown_bin.showdown(file.content);
-        callback(file);
-    }
-}
-
-
 function main() {
     var files = getOpts();
     // if no files given, glob the current directory
@@ -106,9 +87,6 @@ function main() {
     // filter files
     files = files.filter(function (file) { return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/) });
 
-    // allocate array for markdown'd files
-    var marked = files.map(function(){ return null });
-
     // read files
     files = files.map(function (file) {
         //dockify js and css files
@@ -119,52 +97,18 @@ function main() {
         return {name: file, content: content};
     });
 
-    // My sad attempt at a countdown latch
-    // Continue only if all the files have passed through the markdown process
-    var mark_done = function(index) {
-        return function(marked_file) {
-            marked[index] = marked_file;
-            if (marked.every(function(c){ return c !== null })) toclink(marked);
-        };
-    };
-
-    // async markdowning
     for(var i = 0, len = files.length; i < len; i++) {
-        var file = files[i];
-        if (file.name.match(/\.htm[l]?$/)) {
-            marked[i] = file;
-        }
-        else {
-            markdown_pipe(file, mark_done(i));
+        if (!files[i].name.match(/\.htm[l]?$/)) {
+            files[i].content = markdown(files[i].content);
         }
     }
-}
 
-// toclink the incoming files
-function toclink(files) {
-    if (options.toc) {
-        var tocline = /(\s*).\s*{(.+)}/, tocline_res;
-        var h1stuff = jodoc.h1finder(files);
+    // toclink the incoming files
+    if (options.output && options.toc) {
         var toc = fs.readFileSync(options.toc, "utf8").split("\n");
-        var toclinked = [];
-        toc.forEach(function(line) {
-            if ((tocline_res = tocline.exec(line)) != null) {
-                line = jodoc.toclinker(h1stuff, tocline_res[1], tocline_res[2]);
-            }
-            toclinked.push(line);
-        });
-        var tocfile = {name: "_content", content: toclinked.join("\n")};
-        var toc_callback = function(marked_tocfile) {
-            files.push(marked_tocfile);
-            next_phase(files);
-        };
-        markdown_pipe(tocfile, toc_callback);
-    } else {
-        next_phase(files)
-    };
-}
-
-function next_phase(files) {
+        var marked_toc = markdown(jodoc.toclinker(toc,files));
+        files.push({name:"_content", content: marked_toc});
+    }
     files = files.map(function(file){ file.name = jodoc.munge_filename(file.name); return file; });
     var h1stuff = jodoc.h1finder(files);
     var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
