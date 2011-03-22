@@ -53,25 +53,23 @@ function flatten_files(infiles) {
     var outfiles = [];
     infiles = infiles.filter(no_vcs);
     infiles.forEach(function(file) {
-        try {
-            stat = fs.statSync(file);
-            if (stat.isDirectory()) {
-                // make sure readdir puts path back in after
-                var newfiles = fs.readdirSync(file).map(function(f){return path.join(file,f)});
-                // recurse
-                var flat = flatten_files(newfiles);
-                // add the flattened bits back in
-                outfiles = outfiles.concat(flat);
-            }
-            /*
-            * I assume it is a regular file here
-            * Don't do a stupid and run jodoc on a block device or socket
-            * You're gonna have a bad time
-            */
-            else {
-                outfiles.push(file);
-            }
-        } catch (e) {console.log(e)}
+        stat = fs.statSync(file);
+        if (stat.isDirectory()) {
+            // make sure readdir puts path back in after
+            var newfiles = fs.readdirSync(file).map(function(f){return path.join(file,f)});
+            // recurse
+            var flat = flatten_files(newfiles);
+            // add the flattened bits back in
+            outfiles = outfiles.concat(flat);
+        }
+        /*
+        * I assume it is a regular file here
+        * Don't do a stupid and run jodoc on a block device or socket
+        * You're gonna have a bad time
+        */
+        else {
+            outfiles.push(file);
+        }
     });
     return outfiles;
 }
@@ -90,7 +88,7 @@ function main() {
     // read files
     files = files.map(function (file) {
         //dockify js and css files
-        var content = fs.readFileSync(file,"utf8")
+        var content = fs.readFileSync(file,"utf8").toString();
         if (file.match(/\.(js|css)$/)) {
             content = jodoc.docker(content);
         }
@@ -105,7 +103,7 @@ function main() {
 
     // toclink the incoming files
     if (options.output && options.toc) {
-        var toc = fs.readFileSync(options.toc, "utf8").split("\n");
+        var toc = fs.readFileSync(options.toc, "utf8").toString().split("\n");
         var marked_toc = markdown(jodoc.toclinker(toc,files));
         files.push({name:"_content", content: marked_toc});
     }
@@ -113,12 +111,29 @@ function main() {
     var h1stuff = jodoc.h1finder(files);
     var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
     var index = jodoc.indexer(h1stuff.h1s, options.output);
-    console.log(linked_files);
-    console.log(index);
+    var template;
+    if (options.template) {
+        template = fs.readFileSync(options.template,"utf8").toString();
+    }
+    if (options.output) {
+        fs.mkdirSync(options.output,0777);
+        if (!options.noindex) {
+            linked_files.push({name:"_index.html",content:index});
+        }
+        linked_files.forEach(function(lf) {
+            var out = jodoc.html_header(lf.content,options.title,template);
+            fs.writeFile(path.join(options.output,lf.name),out,'utf8',failfast);
+        });
+    } else {
+        var out = linked_files.map(function(lf) {return lf.content});
+        out = out.join('\n');
+        out = jodoc.html_header(out,options.title,template);
+        process.stdout.write(out);
+    }
 }
 
-/* TODO
-    spit out
-*/
+function failfast(err) {
+    if (err) throw err;
+};
 
 main();
