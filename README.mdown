@@ -19,11 +19,11 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 
 - jodoc.js divorced from jodoc-lib, jodoc.js intended to be a simple client
 
-- Don't like jodoc.js? Write your own! Lemme know if jodoc-lib needs better docs.
+- _Don't like jodoc.js?_ __Write your own!__ Lemme know if jodoc-lib needs better docs.
 
-- Don't like showdown? Use your own! Maintaining a process spawner for the sample client was too much.
+- _Don't like showdown?_ __Use your own!__ Maintaining a process spawner for the sample client was too much.
 
-- Don't like the TOC format? Write your own! Supply a regex to toclinker and it parses that input instead!
+- _Don't like the TOC format?_ __Write your own!__ Supply a regex to toclinker and it parses that input instead!
 
 __Planned:__
 
