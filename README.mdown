@@ -7,19 +7,25 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 - Automatic conversion of markdown commented javascript code
 - Self-linking documenatation
 - A quick and easy table of contents system
-- JSON configuration
-
-## Plugable filters
-
-- Add your own filters to pre or post markdown'd docs
-- Probably a few prebaked filters to make pretty, pretty output
+- JSON configuration _coming soon_
 
 ##Status
-**Super ultra pre alpha, everything will change, nothing will work the same!**
 
-*You have been warned!*
+- Should be directly compatible with original jodoc.
 
 ## New stuff, or "Docs Gone Wild!"
+
+- Everything in jodoc-lib intended to be stateless.
+
+- jodoc.js divorced from jodoc-lib, jodoc.js intended to be a simple client
+
+- Don't like jodoc.js? Write your own! Lemme know if jodoc-lib needs better docs.
+
+- Don't like showdown? Use your own! Maintaining a process spawner for the sample client was too much.
+
+- Don't like the TOC format? Write your own! Supply a regex to toclinker and it parses that input instead!
+
+__Planned:__
 
 Adding some new features to the jodoc spec, including easier auto-linking
 between documentation sets. Basically, to make it easier to "roll up" docs
