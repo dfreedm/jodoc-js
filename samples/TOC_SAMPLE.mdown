@@ -1,0 +1,20 @@
+<!-- setting special stuff for use in a frameset -->
+<base target="content"/>
+<link rel="stylesheet" type="text/css" href="contents.css"/>
+
+<!-- markdown-based, put anything you want -->
+<!-- replace {path} to match your project -->
+<!-- works with joDoc autolink, so can manually -->
+<!-- put keywords from docs directly here, like -->
+<!-- "License" below  -->
+
+joDoc Documentation
+-------------------
+
+- {ABOUT.mdown}
+- {README.mdown}
+- {TEMPLATE.mdown}
+- {TOC.mdown}
+- License
+
+[Keyword Index](./_index.html)
