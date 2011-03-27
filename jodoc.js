@@ -116,7 +116,9 @@ function main() {
         template = fs.readFileSync(options.template,"utf8").toString();
     }
     if (options.output) {
-        fs.mkdirSync(options.output,0777);
+        if (!path.existsSync(options.output)) {
+            fs.mkdirSync(options.output,0777);
+        }
         if (!options.noindex) {
             linked_files.push({name:"_index.html",content:index});
         }
