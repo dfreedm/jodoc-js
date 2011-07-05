@@ -109,8 +109,10 @@ function main() {
     }
     files = files.map(function(file){ file.name = jodoc.munge_filename(file.name); return file; });
     var h1stuff = jodoc.h1finder(files);
+    var h3stuff = jodoc.h3finder(files);
     var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
     var index = jodoc.indexer(h1stuff.h1s, options.output);
+    var links = jodoc.h3indexer(h3stuff.h3s, options.output);
     var template;
     if (options.template) {
         template = fs.readFileSync(options.template,"utf8").toString();
@@ -123,13 +125,13 @@ function main() {
             linked_files.push({name:"_index.html",content:index});
         }
         linked_files.forEach(function(lf) {
-            var out = jodoc.html_header(lf.content,options.title,template);
+            var out = jodoc.html_header(lf.content,options.title,template,links);
             fs.writeFile(path.join(options.output,lf.name),out,'utf8',failfast);
         });
     } else {
         var out = linked_files.map(function(lf) {return lf.content});
         out = out.join('\n');
-        out = jodoc.html_header(out,options.title,template);
+        out = jodoc.html_header(out,options.title,template,links);
         process.stdout.write(out);
     }
 }
