@@ -112,7 +112,7 @@ function main() {
     var h3stuff = jodoc.h3finder(files);
     var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
     var index = jodoc.indexer(h1stuff.h1s, options.output);
-    var links = jodoc.h3indexer(h3stuff.h3s, options.output);
+    var links = jodoc.h3index(h3stuff.h3s, options.output);
     var template;
     if (options.template) {
         template = fs.readFileSync(options.template,"utf8").toString();
