@@ -111,6 +111,7 @@ function main() {
     var h1stuff = jodoc.h1finder(files);
     var h3stuff = jodoc.h3finder(files);
     var linked_files = jodoc.autolink(files,h1stuff.h1s,options.output);
+    var linked_h3 = jodoc.autolinkh3(files,h3stuff.h3s,options.output);
     var index = jodoc.indexer(h1stuff.h1s, options.output);
     var links = jodoc.h3index(h3stuff.h3s, options.output);
     var template;
