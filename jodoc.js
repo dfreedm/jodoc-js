@@ -92,56 +92,65 @@ function flatten_files(infiles) {
     return outfiles;
 }
 
-(function main( ) {
+function readFileContent( files, output, toc ){
+
+    files = flatten_files( files );
+
+    var result = files.filter(function( file ){
+        //Filter to files we care about
+            return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/);
+        })
+        .map( function( file ){
+
+            //dockify js and css files
+            var content = fs.readFileSync(file,"utf8").toString();
+            if (file.match(/\.(js|css)$/)) {
+                content = jodoc.docker(content);
+
+            } else if ( !file.match( /\.htm[l]?$/ ) ) {
+
+                content = markdown( content );
+            }
+
+            return {
+                name: file,
+                content: content
+            };        
+        });
+
+    // toclink the incoming files
+    if (output && toc) {
+
+        toc = fs.readFileSync( toc, "utf8" ).toString().split("\n");
+        var marked_toc = markdown( jodoc.toclinker( toc, files ) );
+        result.push({
+            name:"_content",
+            content: marked_toc
+        });
+    }
+
+    return result.map(function( file ){
+
+        file.name = jodoc.munge_filename(file.name);
+        return file;
+    });
+
+
+}
+
+(function( ) {
 
     var options = getOptions(), //Parse command line arguments
-        files = options.files;
+        files = options.files,
+        content;
 
     // if no files given, glob the current directory
     if (!files.length) {
         files.push('.');
     }
 
-    // filter files
-    files = flatten_files( files ).filter(function( file ){
-        return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/);
-    });
-
     // read files
-    files = files.map(function (file) {
-        //dockify js and css files
-        var content = fs.readFileSync(file,"utf8").toString();
-        if (file.match(/\.(js|css)$/)) {
-            content = jodoc.docker(content);
-        }
-        return {
-            name: file,
-            content: content
-        };
-    });
-
-    for(var i = 0, len = files.length; i < len; i++) {
-
-        if ( !files[i].name.match( /\.htm[l]?$/ ) ) {
-
-            files[i].content = markdown( files[i].content );
-        }
-    }
-
-    // toclink the incoming files
-    if (options.output && options.toc) {
-        var toc = fs.readFileSync( options.toc, "utf8" ).toString().split("\n");
-        var marked_toc = markdown( jodoc.toclinker( toc, files ) );
-        files.push({
-            name:"_content",
-            content: marked_toc
-        });
-    }
-    files = files.map(function( file ){
-
-        file.name = jodoc.munge_filename(file.name);
-        return file;
-    });
+    content = readFileContent( files, options.output, options.toc );
 
     if( options.server ){
 
@@ -151,8 +160,8 @@ function flatten_files(infiles) {
                 content;
 
             var filePath = '.' + request.url;
-            
-            if( filePath !== './' ){ //Files will be looked up via output, if not available
+            //Send any files that the user requests
+            if( filePath !== './' ){ 
 
                 filePath = options.output + filePath;
                 path.exists(filePath, function(exists) {
@@ -175,10 +184,12 @@ function flatten_files(infiles) {
 	            }
 	        });
 
-            } else {
+            } else { //Rebuild the jodoc and send it
 
-                linked_files = jodoc.autolink( files,
-                                               jodoc.h1finder( files ).h1s,
+                content = readFileContent( files, options.output, options.toc );
+
+                linked_files = jodoc.autolink( content,
+                                               jodoc.h1finder( content ).h1s,
                                                options.output 
                                              );
                 
@@ -188,15 +199,16 @@ function flatten_files(infiles) {
 
                 response.writeHead( 200, { "Content-Type": "text/html" });
 
+
                 response.end( 
                     jodoc.html_header( content, options.title,
                                        options.template ?
-                                       fs.readFileSync(options.template,"utf8").toString() :
+                                       fs.readFileSync( options.template, "utf8" ).toString() :
                                        undefined ) 
                 );
 
-
-                writeToDisk( files, options.output, options.template, options.noindex, options.title  );
+                //Write to disk subsequent times is broken, not sure why yet
+                //writeToDisk( content, options.output, options.template, options.noindex, options.title  );
             }
         }).listen( !isNaN( options.web ) ? options.web : 1337
                    , 'localhost');
@@ -205,7 +217,7 @@ function flatten_files(infiles) {
 
     }
 
-    writeToDisk( files, options.output, options.template, options.noindex, options.title  );
+    writeToDisk( content, options.output, options.template, options.noindex, options.title  );
 })();
 
 
