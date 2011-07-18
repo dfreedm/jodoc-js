@@ -106,29 +106,27 @@ function readFileContent( files, output, toc ){
 
             //dockify js and css files
             var content = fs.readFileSync( file, "utf8" ).toString();
+
             if( file.match( /\.(js|css)$/ ) ){
 
                 content = jodoc.docker( content );
             }
-            if( !file.match( /\.htm[l]?$/ ) ){
-
-                content = markdown( content );
-            }
 
             return {
                 name: file,
-                content: content
-            };        
+                content: ! file.match( /\.htm[l]?$/ ) ?
+                    content = markdown( content ) : content
+            };
         });
 
     // toclink the incoming files
     if( output && toc ){
 
         toc = fs.readFileSync( toc, "utf8" ).toString().split("\n");
-        var marked_toc = markdown( jodoc.toclinker( toc, files ) );
+
         result.push({
             name:"_content",
-            content: marked_toc
+            content: markdown( jodoc.toclinker( toc, files ) )
         });
     }
 
@@ -164,11 +162,11 @@ function readFileContent( files, output, toc ){
 
             var filePath = '.' + request.url;
             //Send any files that the user requests
-            if( filePath !== './' ){ 
+            if( filePath !== './' ){
 
                 filePath = options.output + filePath;
                 path.exists(filePath, function(exists) {
-	            
+
 	            if( exists ){
 	                fs.readFile(filePath, "binary", function(error, content) {
 	                    if (error) {
@@ -193,30 +191,29 @@ function readFileContent( files, output, toc ){
 
                 linked_files = jodoc.autolink( content,
                                                jodoc.h1finder( content ).h1s,
-                                               options.output 
+                                               options.output
                                              );
-                
-                content = linked_files.map(function( lf ){ 
-                    return lf.content; 
+
+                content = linked_files.map(function( lf ){
+                    return lf.content;
                 }).join('\n');
 
                 response.writeHead( 200, { "Content-Type": "text/html" });
 
 
-                response.end( 
+                response.end(
                     jodoc.html_header( content, options.title,
                                        options.template ?
                                        fs.readFileSync( options.template, "utf8" ).toString() :
-                                       undefined ) 
+                                       undefined )
                 );
 
                 //Write to disk subsequent times is broken, not sure why yet
                 //writeToDisk( content, options.output, options.template, options.noindex, options.title  );
             }
-        }).listen( !isNaN( options.web ) ? options.web : 1337
-                   , 'localhost');
+        }).listen( !isNaN( parseInt( options.server, 10 ) ) ? options.server : 1337 );
 
-        sys.puts("Server running at http://localhost:1337");
+        sys.puts( "Server running at http://localhost:" + ( !isNaN( parseInt( options.server, 10 ) ) ? options.server : 1337) );
 
     }
 
@@ -251,7 +248,7 @@ function writeToDisk( files, output, template, noindex, title ){
             linked_files.push({
                 name:"_index.html",
                 content:index
-            });            
+            });
         } else {
 
             linked_files[i] = {
