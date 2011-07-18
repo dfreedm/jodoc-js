@@ -96,11 +96,13 @@ function readFileContent( files, output, toc ){
 
     files = flatten_files( files );
 
-    var result = files.filter(function( file ){
-        //Filter to files we care about
+    var result = files
+        .filter(function( file ){
+
+            //Filter to files we care about
             return file.match(/\.(js|css|htm[l]?|md(own)?|markdown)$/);
         })
-        .map( function( file ){
+        .map(function( file ){
 
             //dockify js and css files
             var content = fs.readFileSync( file, "utf8" ).toString();
