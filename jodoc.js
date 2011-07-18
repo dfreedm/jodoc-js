@@ -103,11 +103,12 @@ function readFileContent( files, output, toc ){
         .map( function( file ){
 
             //dockify js and css files
-            var content = fs.readFileSync(file,"utf8").toString();
-            if (file.match(/\.(js|css)$/)) {
-                content = jodoc.docker(content);
+            var content = fs.readFileSync( file, "utf8" ).toString();
+            if( file.match( /\.(js|css)$/ ) ){
 
-            } else if ( !file.match( /\.htm[l]?$/ ) ) {
+                content = jodoc.docker( content );
+            }
+            if( !file.match( /\.htm[l]?$/ ) ){
 
                 content = markdown( content );
             }
@@ -119,7 +120,7 @@ function readFileContent( files, output, toc ){
         });
 
     // toclink the incoming files
-    if (output && toc) {
+    if( output && toc ){
 
         toc = fs.readFileSync( toc, "utf8" ).toString().split("\n");
         var marked_toc = markdown( jodoc.toclinker( toc, files ) );
@@ -131,7 +132,7 @@ function readFileContent( files, output, toc ){
 
     return result.map(function( file ){
 
-        file.name = jodoc.munge_filename(file.name);
+        file.name = jodoc.munge_filename( file.name );
         return file;
     });
 
