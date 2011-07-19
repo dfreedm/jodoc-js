@@ -123,11 +123,13 @@ function readFileContent( files, output, toc ){
     if( output && toc ){
 
         toc = fs.readFileSync( toc, "utf8" ).toString().split("\n");
+        //Insert content as first thing in the result
 
-        result.push({
+        result.unshift({
             name:"_content",
             content: markdown( jodoc.toclinker( toc, files ) )
         });
+
     }
 
     return result.map(function( file ){
@@ -195,6 +197,7 @@ function readFileContent( files, output, toc ){
                                              );
 
                 content = linked_files.map(function( lf ){
+
                     return lf.content;
                 }).join('\n');
 
@@ -269,7 +272,7 @@ function writeToDisk( files, output, template, noindex, title ){
         linked_files.forEach(function( lf ){
 
             var out = jodoc.html_header( lf.content, title, template );
-            fs.writeFile( path.join( output,lf.name ), out, 'utf8', failfast );
+            fs.writeFile( path.join( output, lf.name ), out, 'utf8', failfast );
         });
 
     } else {
