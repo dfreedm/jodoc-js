@@ -9,6 +9,20 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 - A quick and easy table of contents system
 - JSON configuration _coming soon_
 
+## Usage
+
+    node jodoc-js <bunch of files>
+
+- Recurses on folders
+- Has some options
+  - output: output folder name
+  - no-index: don't make an index.html for the resulting output folder
+  - toc: Table of Contents template to fill in to contents.html
+  - title: file in the `<title>` tag with the provided string
+  - template: use provided file as an html template
+    - Use `$title` for where the title goes
+    - Use `$body` in the `<body>` tag, or wherever
+
 ##Status
 
 - Should be directly compatible with original jodoc.
