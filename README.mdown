@@ -13,15 +13,21 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 
     node jodoc-js <bunch of files>
 
+- .css, .js files are parsed for markdown comments
+- .mdown, .markdown, or .md files can use freeform markdown
 - Recurses on folders
 - Has some options
-  - output: output folder name
-  - no-index: don't make an index.html for the resulting output folder
+  - output: output folder name, creates individual files for each parsed file instead of one combined output file
+  - no-index: don't make an _index.html for the resulting output folder
   - toc: Table of Contents template to fill in to contents.html
   - title: file in the `<title>` tag with the provided string
   - template: use provided file as an html template
     - Use `$title` for where the title goes
     - Use `$body` in the `<body>` tag, or wherever
+
+### Example using provided Samples
+   
+    node jodoc-js --toc samples/TOC_SAMPLE.mdown --template samples/template.html --output dist src/file1.js src/file2.js doc/main.mdown doc/styleguilde.mdown
 
 ##Status
 
