@@ -7,7 +7,7 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 - Automatic conversion of markdown commented javascript code
 - Self-linking documenatation
 - A quick and easy table of contents system
-- JSON configuration _coming soon_
+- JSON configuration _coming soon_ __Note: not soon enough it seems __
 
 ## Usage
 
@@ -18,7 +18,7 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 - Recurses on folders
 - Has some options
   - output: output folder name, creates individual files for each parsed file instead of one combined output file
-  - no-index: don't make an _index.html for the resulting output folder
+  - no-index: don't make an \_index.html for the resulting output folder
   - toc: Table of Contents template to fill in to contents.html
   - title: file in the `<title>` tag with the provided string
   - template: use provided file as an html template
@@ -27,11 +27,15 @@ A nodejs port of [joDoc](https://github.com/davebalmer/joDoc)
 
 ### Example using provided Samples
    
-    node jodoc-js --toc samples/TOC_SAMPLE.mdown --template samples/template.html --output dist src/file1.js src/file2.js doc/main.mdown doc/styleguilde.mdown
+    node jodoc-js --toc samples/TOC\_SAMPLE.mdown --template samples/template.html --output dist src/file1.js src/file2.js doc/main.mdown doc/styleguilde.mdown
 
-##Status
+## Status
 
-- Should be directly compatible with original jodoc.
+- Breaks from joDoc
+  - New syntax for autolinking: `[<h1name>]`.
+    - Better control over linking
+  - Github style markdown
+    - I like it better, that's why
 
 ## New stuff, or "Docs Gone Wild!"
 

@@ -1,42 +1,32 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
-var path = require('path');
-var jodoc = require(__dirname + '/lib/jodoc-lib.js');
-var markdown = require(__dirname + '/lib/showdown.js').showdown;
+var fs = require("fs");
+var path = require("path");
+var markdown = require("github-flavored-markdown").parse;
+var nopt = require("nopt");
+var jodoc = require("./lib/jodoc-lib.js");
 
 var options = {};
 
 // process commandline arguments
 function getOpts() {
-    var args = process.argv.slice(2), arg = '';
-    var files = [];
-    while(args.length > 0) {
-        arg = args.shift();
-        switch(arg)
-        {
-            case '--output':
-            case '-o': options.output = args.shift();
-                break;
-
-            case '--template': options.template = args.shift();
-                break;
-
-            case '--toc': options.toc = args.shift();
-                break;
-
-            case '-t':
-            case '--title': options.title = args.shift();
-                break;
-
-            case '-ni':
-            case '--no-index': options.noindex = true;
-                break;
-
-            default: files.push(arg);
-        }
+    var opts = {
+        output: path,
+        template: path,
+        toc: path,
+        title: String,
+        index: Boolean
+    },
+    shortHands = {
+        o: ["--output"],
+        t: ["--title"],
+        ni: ["--no-index"]
+    };
+    options = nopt(opts, shortHands);
+    if (typeof options.index === "undefined") {
+        options.index = true;
     }
-    return files;
+    return options.argv.remain;
 }
 
 // avoid recursing down VCS directories
@@ -119,12 +109,12 @@ function main() {
         if (!path.existsSync(options.output)) {
             fs.mkdirSync(options.output,0777);
         }
-        if (!options.noindex) {
+        if (options.index) {
             linked_files.push({name:"_index.html",content:index});
         }
         linked_files.forEach(function(lf) {
             var out = jodoc.html_header(lf.content,options.title,template);
-            fs.writeFile(path.join(options.output,lf.name),out,'utf8',failfast);
+            fs.writeFile(path.join(options.output,lf.name),out,'utf8',function(e) { if(e) throw e });
         });
     } else {
         var out = linked_files.map(function(lf) {return lf.content});
@@ -133,9 +123,5 @@ function main() {
         process.stdout.write(out);
     }
 }
-
-function failfast(err) {
-    if (err) throw err;
-};
 
 main();
