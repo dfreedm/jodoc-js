@@ -15,14 +15,35 @@ function getOpts() {
         template: path,
         toc: path,
         title: String,
-        index: Boolean
+        index: Boolean,
+        config: String
     },
     shortHands = {
         o: ["--output"],
         t: ["--title"],
         ni: ["--no-index"]
-    };
+    },
+    config, prop;
+
     options = nopt(opts, shortHands);
+
+    //require() only available in Node v0.3.7+
+    if( options.config && require ){
+
+        config = require( options.config );
+        for( prop in opts ){
+
+            if( config[ prop ] && !options[ prop ]){
+                options[ prop ] = config[ prop ];
+            }
+        }
+        //This can create duplicate file entries
+        if( config.files ){
+            Array.prototype.push.apply( options.argv.remain, config.files );
+        }
+
+    }
+
     if (typeof options.index === "undefined") {
         options.index = true;
     }
