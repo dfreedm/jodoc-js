@@ -2,7 +2,7 @@
   "author": "Daniel Freedman (http://github.com/azakus)",
   "name": "jodoc",
   "description": "Generate documentation from embedded Markdown comments in javascript source",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "homepage": "https://github.com/azakus/jodoc-js",
   "repository": {
     "type": "git",
