@@ -159,7 +159,7 @@ pre code {
 	font: normal 86% "Monaco", "Courier New", "Courier";
 }
 
-a[href] {
+.header a[href] {
 	white-space: nowrap;
 	text-decoration: none;
 	color: inherit;
@@ -175,7 +175,7 @@ a[href] {
 }
 
 /* puts an * after external links, jodoc designates with .external */
-a[href].external:after {
+.header a[href].external:after {
 	content: "*";
 	font-style: super;
 	opacity: .5;

@@ -1,0 +1,12 @@
+module.exports = {
+    toc:      'samples/TOC_SAMPLE.mdown',
+    title:    'joDoc-js',
+    template: 'samples/template.html',
+    //output:   'dist',
+    files: [
+    //Order here decides the order which it appears in the non-output directory form
+        'samples/index.html',
+        'jodoc.js',
+        'lib/jodoc-lib.js',
+    ]
+};
