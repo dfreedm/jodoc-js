@@ -127,7 +127,7 @@ function main() {
 		template = fs.readFileSync(options.template,"utf8").toString();
 	}
 	if (options.output) {
-		if (!path.existsSync(options.output)) {
+		if (!fs.existsSync(options.output)) {
 			fs.mkdirSync(options.output,0777);
 		}
 		if (options.index) {
